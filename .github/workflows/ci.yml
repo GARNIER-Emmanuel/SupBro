@@ -9,10 +9,10 @@ permissions:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -21,7 +21,7 @@ jobs:
         run: bash ./mvnw -B clean verify
       - name: Rapports Java
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: java-test-reports
           path: |
@@ -30,16 +30,68 @@ jobs:
           if-no-files-found: ignore
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run build
+
+  e2e:
+    needs: [backend, frontend]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      DB_URL: jdbc:postgresql://localhost:5434/supbro_e2e
+      DB_USER: supbro
+      DB_PASSWORD: local-e2e-only
+      CI: 'true'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Installer le frontend
+        working-directory: frontend
+        run: npm ci
+      - name: Préparer Spring Boot
+        run: bash ./mvnw -B -DskipTests package
+      - name: Démarrer la stack et lancer Selenium
+        shell: bash
+        run: |
+          # 1. Démarrer la base, puis les deux applications en arrière-plan.
+          docker compose -p supbro-e2e -f compose.e2e.yaml up -d --wait --wait-timeout 90
+          java -jar target/supbro-0.0.1-SNAPSHOT.jar > backend.log 2>&1 &
+          (cd frontend && npm start -- --host 127.0.0.1 --port 4200) > frontend.log 2>&1 &
+
+          # 2. Attendre l’API, puis vérifier qu’Angular lui transmet les requêtes.
+          curl --fail --silent --show-error --retry 60 --retry-all-errors --retry-delay 2 --retry-max-time 180 --max-time 5 http://localhost:8080/api/friends -o /dev/null
+          curl --fail --silent --show-error --retry 60 --retry-all-errors --retry-delay 2 --retry-max-time 180 --max-time 5 http://localhost:4200/api/friends -o /dev/null
+
+          # 3. Exécuter le test avec Chrome sans fenêtre.
+          bash ./mvnw -B -Pe2e -Dheadless=true -Dit.test=FriendE2EIT verify
+      - name: Rapports et captures Selenium
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: selenium-e2e-results
+          path: |
+            target/failsafe-reports/
+            target/selenium/
+            backend.log
+            frontend.log
+          if-no-files-found: ignore

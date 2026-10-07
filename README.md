@@ -1,26 +1,76 @@
 # Supbro
 
-Petit projet d’apprentissage pour enregistrer les informations de ses amis depuis une interface Angular, avec une API Spring Boot et une base PostgreSQL.
+Petit projet personnel réalisé par curiosité pour découvrir la mise en place de **Selenium**, comprendre son fonctionnement et essayer son exécution dans une CI GitHub Actions.
 
-L’objectif principal est de pratiquer les tests de bout en bout avec Selenium sur un parcours simple : créer un ami, l’afficher et le retrouver après rechargement de la page.
+Je débute avec Selenium et la CI : ce dépôt est un exercice d’apprentissage, avec un périmètre volontairement réduit, plutôt qu’une application destinée à la production.
 
-## Stack prévue
+## Parcours et technologies
 
-- Java 21, Spring Boot et Spring Data JPA
-- Angular
-- PostgreSQL et Flyway pour les migrations
-- JUnit et Mockito pour les tests unitaires
-- Tests d’intégration avec PostgreSQL
-- Selenium pour les tests de bout en bout
-- GitHub Actions pour l’intégration continue
+L’application permet de créer un ami (prénom, nom, notes), de l’enregistrer et de consulter la liste. Le test Selenium reproduit ce parcours dans Chrome, puis recharge la page pour vérifier la persistance.
 
-## Périmètre initial
+- **Frontend :** Angular 21.
+- **Backend :** Java 21, Spring Boot, Spring Data JPA.
+- **Base :** PostgreSQL 17, Docker Compose, migrations Flyway.
+- **Tests :** JUnit, Mockito, AssertJ, Testcontainers et Selenium.
+- **CI :** GitHub Actions, configuré pour les TU/TI, le build Angular et les E2E sur push et pull request.
 
-- Formulaire de création d’un ami : prénom, nom et notes
-- Enregistrement en base et affichage de la liste des amis
-- Validation des données
-- Automatisation des tests et des builds
+## Lancer en local
 
-## État du projet
+Prérequis : Java 21, Node 24, Docker Desktop démarré et Chrome pour Selenium. Commandes pour Bash / Git Bash, depuis la racine.
 
-Le socle Spring Boot, l’entité `Friend`, le repository, les DTO et le mapper sont présents. L’API REST, la configuration PostgreSQL, les migrations, l’interface Angular et les tests métier restent à ajouter.
+```bash
+cp .env.example .env
+docker compose up -d --wait
+export DB_URL='jdbc:postgresql://localhost:5432/supbro'
+export DB_USER='supbro'
+export DB_PASSWORD='local-dev-only'
+bash ./mvnw spring-boot:run
+```
+
+Adapter les variables si les valeurs de `.env` sont modifiées. Dans un autre terminal :
+
+```bash
+cd frontend
+npm ci
+npm start
+```
+
+Ouvrir **http://localhost:4200**. Le proxy Angular transmet les appels API à Spring sur le port 8080.
+
+## Vérifications
+
+TU et TI API (Docker requis) :
+
+```bash
+bash ./mvnw clean verify
+```
+
+Build Angular, depuis `frontend/` :
+
+```bash
+npm run build
+```
+
+Pour Selenium, arrêter le backend de développement, puis le relancer sur la base E2E dédiée :
+
+```bash
+docker compose -p supbro-e2e -f compose.e2e.yaml up -d --wait
+export DB_URL='jdbc:postgresql://localhost:5434/supbro_e2e'
+export DB_USER='supbro'
+export DB_PASSWORD='local-e2e-only'
+bash ./mvnw spring-boot:run
+```
+
+Garder Angular lancé et exécuter depuis un autre terminal à la racine :
+
+```bash
+bash ./mvnw -Pe2e -Dheadless=true verify
+```
+
+Sur GitHub, le job `e2e` démarre cet environnement automatiquement. Ses rapports, logs et éventuelles captures sont disponibles dans l’artefact `selenium-e2e-results`.
+
+Les identifiants ci-dessus sont uniquement destinés au développement local. Ne pas versionner `.env`.
+
+## Documentation
+
+[Workflow CI](.github/workflows/ci.yml)
