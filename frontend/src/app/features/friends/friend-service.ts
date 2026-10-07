@@ -1,19 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-export interface CreateFriend {
-  firstname: string;
-  lastname: string;
-  notes: string;
-}
-
-export interface Friend extends CreateFriend {
-  id: number;
-  nickname: string | null;
-  birthday: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { CreateFriend, Friend } from './models/friend.model';
 
 @Injectable({ providedIn: 'root' })
 export class FriendService {
