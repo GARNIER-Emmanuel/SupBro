@@ -2,12 +2,12 @@ package com.supbro;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 @SpringBootTest
-class SupbroApplicationTests {
-
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+class SupbroApplicationTests extends PostgresTestSupport {
 	@Test
 	void contextLoads() {
 	}
-
 }
