@@ -1,0 +1,17 @@
+meta {
+  name: 01-lister-amis
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/friends
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}
