@@ -1,0 +1,25 @@
+meta {
+  name: 04-lire-fiche
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/friends/{{friendId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("La fiche correspond au POST", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(String(res.getBody().id)).to.equal(bru.getVar("friendId"));
+    expect(res.getBody().firstname).to.equal("Bruno-Lucas");
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}

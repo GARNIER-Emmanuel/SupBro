@@ -1,0 +1,27 @@
+meta {
+  name: 05-ami-inconnu
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/friends/9223372036854775807
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("L'ami inconnu produit une erreur explicite", function () {
+    expect(res.getStatus()).to.equal(404);
+    const body = res.getBody();
+    expect(body.error).to.equal("NOT_FOUND");
+    expect(body.message).to.be.a("string");
+    expect(body.timestamp).to.be.a("string");
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}

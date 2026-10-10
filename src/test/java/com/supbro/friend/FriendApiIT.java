@@ -37,6 +37,12 @@ class FriendApiIT extends PostgresTestSupport {
         return client.send(request, HttpResponse.BodyHandlers.ofString());
     }
 
+    HttpResponse<String> get(String path) throws Exception {
+        var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                .timeout(Duration.ofSeconds(10)).GET().build();
+        return client.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
     @Test
     void createsAndListsPersistedFriend() throws Exception {
         var created = post("""
@@ -68,5 +74,21 @@ class FriendApiIT extends PostgresTestSupport {
         var json = "{\"firstname\":\"Lucas\",\"notes\":\"" + "a".repeat(1001) + "\"}";
         assertThat(post(json).statusCode()).isEqualTo(400);
         assertThat(repository.count()).isZero();
+    }
+
+    @Test
+    void readsOneFriend() throws Exception {
+        post("{\"firstname\":\"Lucas\"}");
+        Long id = repository.findAll().getFirst().getId();
+        var response = get("/api/friends/" + id);
+        assertThat(response.statusCode()).isEqualTo(200);
+        assertThat(response.body()).contains("Lucas");
+    }
+
+    @Test
+    void returnsStructured404() throws Exception {
+        var response = get("/api/friends/9223372036854775807");
+        assertThat(response.statusCode()).isEqualTo(404);
+        assertThat(response.body()).contains("NOT_FOUND", "message", "timestamp");
     }
 }

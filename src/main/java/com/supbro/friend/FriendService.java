@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.supbro.friend.exception.FriendNotFoundException;
 import com.supbro.friend.dto.CreateFriendRequest;
 import com.supbro.friend.dto.FriendResponse;
 
@@ -32,4 +32,9 @@ public class FriendService {
 
     }
 
+    @Transactional(readOnly = true)
+    public FriendResponse findById(Long id) {
+        return mapper.toResponse(repository.findById(id)
+                .orElseThrow(() -> new FriendNotFoundException(id)));
+    }
 }

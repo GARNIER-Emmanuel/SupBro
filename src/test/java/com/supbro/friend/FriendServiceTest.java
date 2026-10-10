@@ -1,6 +1,7 @@
 package com.supbro.friend;
 
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,7 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 import com.supbro.friend.dto.CreateFriendRequest;
-import static org.assertj.core.api.Assertions.assertThat;
+import com.supbro.friend.exception.FriendNotFoundException;
+
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -58,4 +61,18 @@ class FriendServiceTest {
         assertThat(service.findAll()).isEmpty();
     }
 
+    @Test
+    void findsFriendById() {
+        Friend friend = new Friend();
+        friend.setFirstName("Lucas");
+        when(repository.findById(42L)).thenReturn(Optional.of(friend));
+        assertThat(service.findById(42L).firstname()).isEqualTo("Lucas");
+    }
+
+    @Test
+    void rejectsUnknownFriend() {
+        when(repository.findById(42L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.findById(42L))
+                .isInstanceOf(FriendNotFoundException.class);
+    }
 }
