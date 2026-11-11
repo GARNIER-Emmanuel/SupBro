@@ -37,6 +37,20 @@ public class Friend {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    public Friend() {
+    }
+
+    public Friend(Long id, String firstName, String lastName, String nickname, LocalDate birthday, String notes, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.nickname = nickname;
+        this.birthday = birthday;
+        this.notes = notes;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     @PrePersist
     protected void onCreated() {
         LocalDateTime now = LocalDateTime.now();
