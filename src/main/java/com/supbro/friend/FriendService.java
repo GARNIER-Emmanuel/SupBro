@@ -29,12 +29,18 @@ public class FriendService {
         return repository.findAll(Sort.by("id")).stream()
                 .map(mapper::toResponse)
                 .toList();
-
     }
 
     @Transactional(readOnly = true)
     public FriendResponse findById(Long id) {
         return mapper.toResponse(repository.findById(id)
                 .orElseThrow(() -> new FriendNotFoundException(id)));
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+        Friend friendFound = repository.findById(id).orElseThrow(() -> new FriendNotFoundException(id));
+
+        repository.delete(friendFound);
     }
 }

@@ -1,0 +1,24 @@
+meta {
+  name: 07-supprimer-friend
+  type: http
+  seq: 7
+}
+
+delete {
+  url: {{baseUrl}}/api/friends/{{friendId}}
+  body: none
+  auth: inherit
+}
+
+tests {
+  test("La suppression retourne 204 No Content et un corps vide", function () {
+    expect(res.getStatus()).to.equal(204);
+    expect(res.getBody()).to.be.empty;
+  });
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+  forwardAuthorizationHeader: false
+}
